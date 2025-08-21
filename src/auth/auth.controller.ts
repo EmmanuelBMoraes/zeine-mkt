@@ -4,6 +4,7 @@ import {
   Body,
   UnauthorizedException,
   ConflictException,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -25,6 +26,7 @@ export class AuthController {
     }
   }
 
+  @HttpCode(200)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     const user = await this.authService.validateUser(
