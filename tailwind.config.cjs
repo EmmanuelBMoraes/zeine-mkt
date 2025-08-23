@@ -81,6 +81,7 @@ module.exports = {
           anunciado: "#5EC5FD",
         },
         "badge-dark": "#1D1D1D",
+        "base-shape": "#F5EAEA",
       },
       borderRadius: {
         lg: "var(--radius)",

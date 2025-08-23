@@ -9,3 +9,5 @@ export interface Produto {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ProdutoPayload = Omit<Produto, "_id" | "createdAt" | "updatedAt">;

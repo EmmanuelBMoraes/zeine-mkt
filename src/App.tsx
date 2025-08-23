@@ -13,6 +13,7 @@ import MainLayout from "./components/layouts/MainLayout";
 
 import LoginPage from "./pages/auth/LoginPage";
 import ProductListPage from "./pages/products/ProductListPage";
+import ProductCreatePage from "./pages/products/ProductCreatePage";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
+            <Route path="/products/new" element={<ProductCreatePage />} />
             <Route path="/products" element={<ProductListPage />} />
             <Route path="/" element={<Navigate to="/products" />} />
           </Route>

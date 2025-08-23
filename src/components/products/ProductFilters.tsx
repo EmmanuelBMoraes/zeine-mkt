@@ -1,4 +1,5 @@
-import { Search } from "lucide-react";
+import Search from "../../assets/icon/search-01.svg";
+import filterTag from "../../assets/icon/sale-tag-02.svg";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -12,9 +13,9 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import { SelectTriggerWithIcon } from "../ui/select-icon";
 
 interface ProductFiltersProps {
   searchTerm: string;
@@ -40,7 +41,10 @@ export const ProductFilters = ({
         <div className="space-y-2">
           <Label htmlFor="search">Pesquisar</Label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <img
+              src={Search}
+              className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground"
+            />
             <Input
               id="search"
               type="search"
@@ -54,9 +58,17 @@ export const ProductFilters = ({
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            <SelectTrigger id="status" className="w-full">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
+            <SelectTriggerWithIcon
+              id="status"
+              icon={
+                <img
+                  src={filterTag}
+                  className="h-6 w-6 text-muted-foreground"
+                />
+              }
+            >
+              <SelectValue placeholder="Selecione o status" />
+            </SelectTriggerWithIcon>
             <SelectContent>
               <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="ativo">Ativo</SelectItem>
