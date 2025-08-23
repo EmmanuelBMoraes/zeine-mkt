@@ -1,0 +1,93 @@
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Package, Plus } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import { useAuth } from "../../contexts/AuthContext";
+import { cn } from "../../lib/utils";
+import logo from "../../assets/logo.svg";
+
+const Header = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/products", label: "Produtos", icon: Package },
+  ];
+
+  return (
+    <header className="sticky top-0 z-30 flex h-16 items-center border-b px-6">
+      {/* Esquerda: Logo */}
+      <div className="flex items-center">
+        <Link to="/products" className="flex items-center gap-2">
+          <img src={logo} alt="Marketplace Logo" className="h-8 w-8" />
+        </Link>
+      </div>
+
+      <div className="flex-1 flex justify-center">
+        <nav className="hidden items-center gap-2 rounded-lg bg-gray-100/80 p-1 md:flex">
+          {navLinks.map((link) => {
+            const isActive = location.pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.label}
+                to={link.href}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-white text-brand-orange-base shadow-sm"
+                    : "text-gray-500 hover:bg-gray-200/50 hover:text-gray-900"
+                )}
+              >
+                <link.icon className="h-4 w-4" />
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <Button className="bg-brand-orange-base hover:bg-brand-orange-dark shadow-sm">
+          <Plus className="mr-2 h-4 w-4" /> Novo produto
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full h-9 w-9"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Configurações</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>Sair</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
