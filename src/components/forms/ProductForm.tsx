@@ -1,7 +1,7 @@
-import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import {
   Select,
@@ -11,25 +11,54 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
-import { ImageUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import upload from "../../assets/icon/image-upload.svg";
 import { createProduct, uploadImage } from "../../api/productService";
 import type { ProdutoPayload } from "../../types";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../../components/ui/form";
+import { CurrencyInput } from "../shared/CurrencyInput";
+
+// 1. Definir o schema de validação com Zod
+const formSchema = z.object({
+  titulo: z.string().min(3, { message: "O título é obrigatório." }),
+  valor: z.string().min(1, { message: "O valor é obrigatório." }),
+  descricao: z
+    .string()
+    .min(10, { message: "A descrição deve ter pelo menos 10 caracteres." })
+    .max(500, { message: "A descrição deve ter no máximo 500 caracteres." }),
+  categoria: z
+    .string()
+    .min(1, { message: "Por favor, selecione uma categoria." }),
+});
 
 interface IImageUploadProps {
   imagePreview: string | null;
   onImageSelect: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled: boolean;
+  hasError: boolean; // 1. Adicionar prop para o estado de erro
 }
 
 const ImageUpload = ({
   imagePreview,
   onImageSelect,
   disabled,
+  hasError, // 2. Usar a prop
 }: IImageUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleCardClick = () => {
-    fileInputRef.current?.click();
+    if (!disabled) fileInputRef.current?.click();
   };
 
   return (
@@ -39,203 +68,225 @@ const ImageUpload = ({
         ref={fileInputRef}
         onChange={onImageSelect}
         className="hidden"
-        accept="image/png, image/jpeg, image/webp"
+        accept="image/*"
         disabled={disabled}
       />
       <Card
         onClick={handleCardClick}
-        className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-base-shape h-full min-h-[300px] transition-colors ${
+        // 3. Aplicar estilos de erro condicionalmente
+        className={`flex flex-col bg-base-shape items-center justify-center border-2 border-dashed h-full min-h-[300px] transition-colors ${
+          hasError ? "border-danger" : "border-gray-300"
+        } ${
           !disabled
             ? "cursor-pointer hover:border-brand-orange-base"
             : "cursor-not-allowed bg-gray-100"
         }`}
       >
-        <CardContent className="text-center p-4">
+        <CardContent className="text-center p-4 flex flex-col justify-center items-center h-full">
           {imagePreview ? (
             <img
               src={imagePreview}
-              alt="Pré-visualização do produto"
+              alt="Pré-visualização"
               className="max-h-full max-w-full object-contain rounded-md"
             />
           ) : (
             <>
-              <ImageUp className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-4 text-sm font-semibold text-gray-600">
-                Selecione a imagem do produto
+              <img
+                src={upload}
+                className={`mx-auto h-12 w-12 ${
+                  hasError ? "text-danger" : "text-gray-400"
+                }`}
+              />
+              <p
+                className={`mt-4 text-sm font-semibold ${
+                  hasError ? "text-danger" : "text-gray-600"
+                }`}
+              >
+                Selecione a imagem
               </p>
             </>
           )}
         </CardContent>
       </Card>
+      {/* 4. Mostrar a mensagem de erro */}
+      {hasError && (
+        <p className="text-sm text-red-500 mt-2 text-center ">
+          A imagem é obrigatória.
+        </p>
+      )}
     </>
   );
 };
 
 export const ProductForm = () => {
-  const [formData, setFormData] = useState({
-    titulo: "",
-    valor: "",
-    descricao: "",
-    categoria: "",
-  });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [imageError, setImageError] = useState(false); // 5. Estado para controlar o erro da imagem
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      titulo: "",
+      valor: "",
+      descricao: "",
+      categoria: "",
+    },
+  });
+
+  const { isSubmitting } = form.formState;
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+      setImageError(false); // 6. Limpa o erro quando uma imagem é selecionada
     }
   };
 
-  const handleFormChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [id]: value }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setFormData((prevData) => ({ ...prevData, categoria: value }));
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!imageFile) {
-      alert("Por favor, selecione uma imagem para o produto.");
+      setImageError(true); // 7. Define o erro se nenhuma imagem for selecionada
+      toast.error("Por favor, selecione uma imagem para o produto.");
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      console.log("Componente: Chamando o serviço de upload de imagem...");
       const imageResponse = await uploadImage(imageFile);
       const { imageUrl } = imageResponse;
+
       const productPayload: ProdutoPayload = {
-        titulo: formData.titulo,
-        preco: parseFloat(formData.valor),
-        descricao: formData.descricao,
+        ...values,
+        preco: parseFloat(values.valor),
         status: "ativo",
-        categoria: formData.categoria,
         imagemUrl: imageUrl,
       };
 
-      console.log("Componente: Chamando o serviço de criação de produto...");
       await createProduct(productPayload);
-
-      alert("Produto cadastrado com sucesso!");
+      toast.success("Produto cadastrado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      navigate("/products");
     } catch (error) {
-      console.error(
-        "Ocorreu um erro no componente ao tentar cadastrar o produto:",
-        error
-      );
-      alert(
-        "Falha ao cadastrar o produto. Verifique os dados e tente novamente."
-      );
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Falha ao cadastrar o produto. Tente novamente.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-9">
-      <div className="lg:col-span-2">
-        <ImageUpload
-          imagePreview={imagePreview}
-          onImageSelect={handleImageChange}
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div className="lg:col-span-7">
-        <Card className="shadow-sm">
-          <CardContent className="p-8">
-            <h3 className="text-xl font-bold mb-6">Dados do produto</h3>
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="titulo">TÍTULO</Label>
-                  <Input
-                    id="titulo"
-                    placeholder="Nome do produto"
-                    value={formData.titulo}
-                    onChange={handleFormChange}
-                    disabled={isSubmitting}
-                    required
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="grid gap-8 lg:grid-cols-3 items-start"
+      >
+        <div className="lg:col-span-1">
+          <ImageUpload
+            imagePreview={imagePreview}
+            onImageSelect={handleImageChange}
+            disabled={isSubmitting}
+            hasError={imageError}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <Card className="shadow-sm">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-bold mb-6">Dados do produto</h3>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="titulo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>TÍTULO</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome do produto" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="valor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>VALOR</FormLabel>
+                        <FormControl>
+                          <CurrencyInput field={field} placeholder="R$ 0,00" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="valor">VALOR</Label>
-                  <Input
-                    id="valor"
-                    type="number"
-                    placeholder="R$ 0,00"
-                    value={formData.valor}
-                    onChange={handleFormChange}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="descricao">DESCRIÇÃO</Label>
-                <Textarea
-                  id="descricao"
-                  placeholder="Escreva detalhes sobre o produto, tamanho, características"
-                  value={formData.descricao}
-                  onChange={handleFormChange}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="categoria">CATEGORIA</Label>
-                <Select
-                  value={formData.categoria}
-                  onValueChange={handleCategoryChange}
-                  disabled={isSubmitting}
-                  required
-                >
-                  <SelectTrigger id="categoria">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="moveis">Móveis</SelectItem>
-                    <SelectItem value="vestuario">Vestuário</SelectItem>
-                    <SelectItem value="brinquedos">Brinquedos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end gap-4 pt-4">
-                <Button variant="outline" type="button" disabled={isSubmitting}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-brand-orange-base hover:bg-brand-orange-dark"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    "Salvar e publicar"
+                <FormField
+                  control={form.control}
+                  name="descricao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DESCRIÇÃO</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Escreva detalhes sobre o produto..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
+                />
+                <FormField
+                  control={form.control}
+                  name="categoria"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CATEGORIA</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="moveis">Móveis</SelectItem>
+                          <SelectItem value="vestuario">Vestuário</SelectItem>
+                          <SelectItem value="brinquedos">Brinquedos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => navigate("/products")}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-brand-orange-base hover:bg-brand-orange-dark"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      "Salvar e publicar"
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </form>
+            </CardContent>
+          </Card>
+        </div>
+      </form>
+    </Form>
   );
 };

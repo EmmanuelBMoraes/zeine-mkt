@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-
+import { Toaster } from "sonner";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import PublicRoute from "./components/shared/PublicRoute";
 
@@ -18,24 +18,27 @@ import RegisterPage from "./pages/auth/RegisterPage";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route element={<PublicRoute />}>
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+    <>
+      <Router>
+        <Routes>
+          <Route element={<PublicRoute />}>
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
           </Route>
-        </Route>
-        <Route element={<ProtectedRoute />}>
-          <Route element={<MainLayout />}>
-            <Route path="/products/new" element={<ProductCreatePage />} />
-            <Route path="/products" element={<ProductListPage />} />
-            <Route path="/" element={<Navigate to="/products" />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<MainLayout />}>
+              <Route path="/products/new" element={<ProductCreatePage />} />
+              <Route path="/products" element={<ProductListPage />} />
+              <Route path="/" element={<Navigate to="/products" />} />
+            </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<div>404 - Página Não Encontrada</div>} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<div>404 - Página Não Encontrada</div>} />
+        </Routes>
+      </Router>
+      <Toaster richColors position="top-right" />
+    </>
   );
 }
 

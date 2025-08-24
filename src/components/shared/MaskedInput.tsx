@@ -11,7 +11,7 @@ interface MaskedInputProps extends Omit<InputProps, "value" | "onChange"> {
 }
 
 const MaskedInput = React.forwardRef<HTMLInputElement, MaskedInputProps>(
-  ({ mask, field, ...props }, ref) => {
+  ({ mask, field, ...props }, _ref) => {
     const { ref: iMaskRef } = useIMask(
       { mask },
       { onAccept: (value: any) => field.onChange(value) }
