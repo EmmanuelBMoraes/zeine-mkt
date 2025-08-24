@@ -14,6 +14,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import ProductListPage from "./pages/products/ProductListPage";
 import ProductCreatePage from "./pages/products/ProductCreatePage";
+import RegisterPage from "./pages/auth/RegisterPage";
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
         <Route element={<PublicRoute />}>
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<div>Página de Registo</div>} />
+            <Route path="/register" element={<RegisterPage />} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute />}>
