@@ -29,7 +29,6 @@ export class CreateProductDto {
   @IsOptional()
   status?: ProductStatus;
 
-  @IsUrl()
   @IsOptional()
   imagemUrl?: string;
 }

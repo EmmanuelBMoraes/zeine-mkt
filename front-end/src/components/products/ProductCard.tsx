@@ -35,7 +35,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       <CardHeader className="p-0 relative">
         <img
           src={
-            `http://localhost:3000${product.imagemUrl}` ||
+            `${import.meta.env.VITE_API_URL}${product.imagemUrl}` ||
             "https://via.placeholder.com/300x200"
           }
           alt={product.titulo}

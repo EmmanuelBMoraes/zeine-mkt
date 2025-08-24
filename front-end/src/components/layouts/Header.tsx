@@ -20,7 +20,7 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
-import logo from "../../assets/logo-1.svg";
+import logo from "../../assets/Logo-1.svg";
 import { useState, useRef } from "react";
 
 const Header = () => {
