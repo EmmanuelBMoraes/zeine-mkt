@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "3f594438-7ee3-4628-b464-4ce614ae7249",
+		"name": "Marketplace API (NestJS)",
+		"description": "Coleção de rotas para a API de Marketplace construída com NestJS.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40126157"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Novo Utilizador\",\n  \"email\": \"utilizador@exemplo.com\",\n  \"password\": \"senha123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Regista um novo utilizador e retorna um token de acesso."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set(\"authToken\", pm.response.json().access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"utilizador@exemplo.com\",\n  \"password\": \"senha123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Autentica um utilizador e guarda o token de acesso numa variável de coleção."
+					},
+					"response": []
+				}
+			],
+			"description": "Rotas para autenticação e registo de utilizadores."
+		},
+		{
+			"name": "Products (Protected)",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"upload"
+							]
+						},
+						"description": "Faz o upload de uma imagem de produto e retorna a URL."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Produto Fantástico\",\n  \"descricao\": \"Esta é a descrição de um produto realmente fantástico.\",\n  \"preco\": 99.99,\n  \"categoria\": \"Eletrónicos\",\n  \"status\": \"ativo\",\n  \"imagemUrl\": \"/uploads/nome-do-ficheiro.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/SEU_ID_DE_PRODUTO_AQUI",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"SEU_ID_DE_PRODUTO_AQUI"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"preco\": 129.99,\n  \"status\": \"vendido\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/SEU_ID_DE_PRODUTO_AQUI",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"SEU_ID_DE_PRODUTO_AQUI"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/SEU_ID_DE_PRODUTO_AQUI",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"SEU_ID_DE_PRODUTO_AQUI"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Rotas para gerir produtos. Requer autenticação.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{authToken}}",
+						"type": "string"
+					}
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "FAÇA_LOGIN_PARA_OBTER_O_TOKEN",
+			"type": "string"
+		}
+	]
+}
